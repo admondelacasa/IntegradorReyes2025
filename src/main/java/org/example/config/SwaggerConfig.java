@@ -16,8 +16,8 @@ public class SwaggerConfig {
                         .version("1.0.0")
                         .description("API REST para analizar secuencias de ADN y determinar si un humano es mutante. Incluye lógica de persistencia y estadísticas.")
                         .contact(new Contact()
-                                .name("/GitHub")
-                                .url("https://github.com/tu-usuario/repo-mutantes")
+                                .name("Francisco/GitHub")
+                                .url("https://https://github.com/admondelacasa/IntegradorReyes2025")
                                 .email("franreyessegura@gmail.com")));
     }
 }

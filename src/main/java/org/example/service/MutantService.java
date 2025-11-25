@@ -29,7 +29,9 @@ public class MutantService {
 
         boolean isMutant = mutantDetector.isMutant(dna);
 
-        DnaRecord record = new DnaRecord(dnaHash, isMutant);
+        DnaRecord record = new DnaRecord();
+        record.setDnaHash(dnaHash);
+        record.setMutant(isMutant);
         dnaRecordRepository.save(record);
 
         return isMutant;
