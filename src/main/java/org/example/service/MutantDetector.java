@@ -1,6 +1,7 @@
 package org.example.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.validation.ValidDnaSequenceValidator;
 
 import java.util.Set;
 @RequiredArgsConstructor
@@ -8,6 +9,9 @@ public class MutantDetector {
     private static final int SEQUENCE_LENGTH = 4;
     private static final Set<Character> VALID_BASES = Set.of('A', 'T', 'C', 'G');
     public boolean isMutant(String[] dna) {
+        if (!ValidDnaSequenceValidator.isValidDna(dna)) {
+            return false;
+        }
         final int n = dna.length;
         char[][] matrix = new char [n][];
         for (int i = 0; i < n; i++) {

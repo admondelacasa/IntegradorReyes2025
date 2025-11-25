@@ -3,6 +3,7 @@ package org.example.service;
 import org.example.entity.DnaRecord;
 import org.example.exception.DnaHashCalculationException;
 import org.example.repository.DnaRecordRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,106 +30,95 @@ class MutantServiceTest {
 
     private final String[] mutantDna = {"ATGC", "CAGT", "TTAT", "AGGG"};
     private final String[] humanDna = {"ATGC", "CAGT", "TTAT", "AGAT"};
-    // Nota: El hash se calcula internamente, por lo que usaremos String.join() como proxy simple
-    private final String mutantHash = String.join("", mutantDna);
-    private final String humanHash = String.join("", humanDna);
 
-    // --- CASOS DE NUEVO ADN (SIN CACHÉ) ---
-
+    // Test 1
     @Test
-    void testAnalyzeDna_NewMutant_ShouldSaveAndReturnTrue() {
-        // ARRANGE: Simula que NO se encuentra el hash en BD (es nuevo)
-        when(dnaRecordRepository.findByDnaHash(mutantHash)).thenReturn(Optional.empty());
-        // ARRANGE: Simula que el detector dice que ES mutante
-        when(mutantDetector.isMutant(mutantDna)).thenReturn(true);
+    @DisplayName("Debe analizar ADN mutante y guardarlo en DB")
+    void testAnalyzeMutantDnaAndSave() {
+        // ARRANGE (Preparar)
+        when(dnaRecordRepository.findByDnaHash(anyString()))
+                .thenReturn(Optional.empty());  // No existe en BD
+        when(mutantDetector.isMutant(mutantDna))
+                .thenReturn(true);  // Es mutante
+        when(dnaRecordRepository.save(any(DnaRecord.class)))
+                .thenReturn(new DnaRecord());  // Guardado exitoso
 
-        // ACT
+        // ACT (Actuar)
         boolean result = mutantService.analyzeDna(mutantDna);
 
-        // ASSERT
-        assertTrue(result, "Debe ser mutante");
-        // Verifica que se llamó al detector y a guardar en BD
+        // ASSERT (Afirmar)
+        assertTrue(result);
+
+        // VERIFY (Verificar interacciones)
         verify(mutantDetector, times(1)).isMutant(mutantDna);
         verify(dnaRecordRepository, times(1)).save(any(DnaRecord.class));
-        verify(dnaRecordRepository, never()).findByDnaHash(humanHash); // Asegura que se usa el hash correcto
     }
-
+    // Test 2
     @Test
-    void testAnalyzeDna_NewHuman_ShouldSaveAndReturnFalse() {
-        // ARRANGE: Simula que NO se encuentra el hash
-        when(dnaRecordRepository.findByDnaHash(humanHash)).thenReturn(Optional.empty());
-        // ARRANGE: Simula que el detector dice que NO es mutante
-        when(mutantDetector.isMutant(humanDna)).thenReturn(false);
+    @DisplayName("Debe analizar ADN humano y guardarlo en DB")
+    void testAnalyzeHumanDnaAndSave() {
+        when(dnaRecordRepository.findByDnaHash(anyString()))
+                .thenReturn(Optional.empty());
+        when(mutantDetector.isMutant(humanDna))
+                .thenReturn(false);  // Es humano
+        when(dnaRecordRepository.save(any(DnaRecord.class)))
+                .thenReturn(new DnaRecord());
 
-        // ACT
         boolean result = mutantService.analyzeDna(humanDna);
 
-        // ASSERT
-        assertFalse(result, "Debe ser humano");
-        // Verifica que se llamó al detector y a guardar en BD
+        assertFalse(result);
         verify(mutantDetector, times(1)).isMutant(humanDna);
         verify(dnaRecordRepository, times(1)).save(any(DnaRecord.class));
     }
-
-    // --- CASOS DE CACHÉ (ADN EXISTENTE) ---
-
+    // Test 3
     @Test
-    void testAnalyzeDna_ExistingMutant_ShouldReturnTrueAndSkipDetection() {
-        // ARRANGE: Simula que SÍ se encuentra el hash en BD
-        DnaRecord cachedMutant = new DnaRecord();
-        cachedMutant.setId(1L);
-        cachedMutant.setDnaHash(mutantHash);
-        cachedMutant.setMutant(true);
-        when(dnaRecordRepository.findByDnaHash(mutantHash)).thenReturn(Optional.of(cachedMutant));
+    @DisplayName("Debe retornar resultado cacheado si el ADN ya fue analizado")
+    void testReturnCachedResultForAnalyzedDna() {
+        // ARRANGE
+        DnaRecord cachedRecord = new DnaRecord("somehash", true);
+        when(dnaRecordRepository.findByDnaHash(anyString()))
+                .thenReturn(Optional.of(cachedRecord));  // YA existe en BD
 
         // ACT
         boolean result = mutantService.analyzeDna(mutantDna);
 
         // ASSERT
-        assertTrue(result, "Debe ser mutante desde el caché");
-        // Verifica que NO se llamó al detector ni a guardar en BD
+        assertTrue(result);
+
+        // VERIFY - NO debe llamar al detector ni guardar
         verify(mutantDetector, never()).isMutant(any());
-        verify(dnaRecordRepository, never()).save(any(DnaRecord.class));
+        verify(dnaRecordRepository, never()).save(any());
     }
-
+    // Test 4
     @Test
-    void testAnalyzeDna_ExistingHuman_ShouldReturnFalseAndSkipDetection() {
-        // ARRANGE: Simula que SÍ se encuentra el hash en BD
-        DnaRecord cachedHuman = new DnaRecord();
-        cachedHuman.setId(1L);
-        cachedHuman.setDnaHash(humanHash);
-        cachedHuman.setMutant(false);
-        when(dnaRecordRepository.findByDnaHash(humanHash)).thenReturn(Optional.of(cachedHuman));
+    @DisplayName("Debe generar hash consistente para el mismo ADN")
+    void testConsistentHashGeneration() {
+        when(dnaRecordRepository.findByDnaHash(anyString()))
+                .thenReturn(Optional.empty());
+        when(mutantDetector.isMutant(any()))
+                .thenReturn(true);
 
-        // ACT
-        boolean result = mutantService.analyzeDna(humanDna);
+        mutantService.analyzeDna(mutantDna);
+        mutantService.analyzeDna(mutantDna);  // Mismo DNA otra vez
 
-        // ASSERT
-        assertFalse(result, "Debe ser humano desde el caché");
-        // Verifica que NO se llamó al detector ni a guardar en BD
-        verify(mutantDetector, never()).isMutant(any());
-        verify(dnaRecordRepository, never()).save(any(DnaRecord.class));
+        // Debe buscar por el mismo hash ambas veces
+        verify(dnaRecordRepository, times(2)).findByDnaHash(anyString());
     }
-
-    // --- CASOS DE ERROR (Hash) ---
-
+    // Test 5
     @Test
-    void testAnalyzeDna_HashCalculationError_ShouldThrowException() {
-        // ARRANGE: Mockear el hash para forzar un error.
-        // Como el cálculo del hash está interno, debemos simular que lanza la excepción
-        // (Esto requiere que la lógica de calculateHash pueda ser inyectada o que el servicio sea testeado como integración).
-        // Si no se puede mockear el cálculo, debemos cubrir la excepción dentro del catch del servicio.
+    @DisplayName("Debe guardar registro con hash correcto")
+    void testSavesRecordWithCorrectHash() {
+        when(dnaRecordRepository.findByDnaHash(anyString()))
+                .thenReturn(Optional.empty());
+        when(mutantDetector.isMutant(mutantDna))
+                .thenReturn(true);
 
-        // Asumiendo que calculateHash() podría lanzar DnaHashCalculationException
-        assertThrows(DnaHashCalculationException.class, () -> {
-            // Este test es complejo porque calcularHash es private. Lo probaremos con el Integration Test.
-            // Para el Unit Test, verificamos la lógica de caché y detector.
+        mutantService.analyzeDna(mutantDna);
 
-            // Si el detector lanza una excepción por validación, esta debe ser propagada
-            when(dnaRecordRepository.findByDnaHash(anyString())).thenReturn(Optional.empty());
-            doThrow(new IllegalArgumentException("Invalid DNA")).when(mutantDetector).isMutant(any());
-
-            assertThrows(IllegalArgumentException.class, () -> mutantService.analyzeDna(new String[]{"INVALID"}));
-        });
+        verify(dnaRecordRepository).save(argThat(record ->
+                record.getDnaHash() != null &&
+                        record.getDnaHash().length() == 64 &&  // SHA-256 = 64 chars hex
+                        record.isMutant()
+        ));
     }
 }

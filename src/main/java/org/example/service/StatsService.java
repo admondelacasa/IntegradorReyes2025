@@ -11,16 +11,11 @@ import java.util.List;
 public class StatsService {
     private final DnaRecordRepository dnaRecordRepository;
     public StatsResponse getStats() {
-        List<DnaRecord> allRecords = dnaRecordRepository.findAll();
-        long humanCount = allRecords.stream()
-                .filter(x -> !x.isMutant())
-                .count();
-        long mutantCount = allRecords.stream()
-                .filter(DnaRecord::isMutant)
-                .count();
+        long humanCount = dnaRecordRepository.countByIsMutant(false);
+        long mutantCount = dnaRecordRepository.countByIsMutant(true);
         double ratio;
-        if (humanCount + mutantCount == 0) ratio = 0.0;
-        else ratio = (double)mutantCount / (humanCount + mutantCount);
+        if (humanCount == 0) ratio = (double) mutantCount;
+        else ratio = (double)mutantCount / humanCount;
 
         return new StatsResponse(mutantCount, humanCount, ratio);
     }

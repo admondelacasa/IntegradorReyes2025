@@ -12,11 +12,13 @@ public class ValidDnaSequenceValidator implements ConstraintValidator<ValidDnaSe
 
     @Override
     public boolean isValid(String[] dna, ConstraintValidatorContext context) {
+        return isValidDna(dna);
+    }
 
+    public static boolean isValidDna(String[] dna) {
         if (dna == null || dna.length == 0) {
             return false;
         }
-
         final int n = dna.length;
         for (String row : dna) {
             if (row == null || row.length() != n) {
