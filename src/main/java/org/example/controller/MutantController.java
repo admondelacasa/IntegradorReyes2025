@@ -5,12 +5,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.DnaRequest;
+import org.example.dto.HealthResponse;
 import org.example.dto.StatsResponse;
 import org.example.service.MutantService;
 import org.example.service.StatsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/")
@@ -39,5 +42,9 @@ public class MutantController {
     @GetMapping("/stats")
     public ResponseEntity<StatsResponse> getStats() {
         return ResponseEntity.ok(statsService.getStats());
+    }
+    @PostMapping("/health")
+    public ResponseEntity<HealthResponse> healthCheck() {
+        return ResponseEntity.ok(new HealthResponse("UP", LocalDateTime.now()));
     }
 }

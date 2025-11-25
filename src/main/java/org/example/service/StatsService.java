@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.example.dto.StatsResponse;
 import org.example.entity.DnaRecord;
 import org.example.repository.DnaRecordRepository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+@Service
 @RequiredArgsConstructor
 public class StatsService {
     private final DnaRecordRepository dnaRecordRepository;

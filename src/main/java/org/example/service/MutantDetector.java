@@ -1,9 +1,13 @@
 package org.example.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.validation.ValidDnaSequenceValidator;
+import org.springframework.stereotype.Service;
 
 import java.util.Set;
+@Slf4j
+@Service
 @RequiredArgsConstructor
 public class MutantDetector {
     private static final int SEQUENCE_LENGTH = 4;
@@ -51,26 +55,34 @@ public class MutantDetector {
     }
     private boolean checkHorizontal(char[][] matrix, int row, int col) {
         final char base = matrix[row][col];
-        return matrix[row][col + 1] == base &&
+        boolean found = matrix[row][col + 1] == base &&
                 matrix[row][col + 2] == base &&
                 matrix[row][col + 3] == base;
+        if(found) log.debug("Secuencia horizontal encontrada en fila {} col {}", row, col);
+        return found;
     }
     private boolean checkVertical(char[][] matrix, int row, int col) {
         final char base = matrix[row][col];
-        return matrix[row + 1][col] == base &&
+        boolean found = matrix[row + 1][col] == base &&
                 matrix[row + 2][col] == base &&
                 matrix[row + 3][col] == base;
+        if(found) log.debug("Secuencia vertical encontrada en fila {} col {}", row, col);
+        return found;
     }
     private boolean checkDiagonalAscending(char[][] matrix, int row, int col) {
         final char base = matrix[row][col];
-        return matrix[row - 1][col + 1] == base &&
+        boolean found = matrix[row - 1][col + 1] == base &&
                 matrix[row - 2][col + 2] == base &&
                 matrix[row - 3][col + 3] == base;
+        if(found) log.debug("Secuencia diagonal ascendente encontrada en fila {} col {}", row, col);
+        return found;
     }
     private boolean checkDiagonalDescending(char[][] matrix, int row, int col) {
         final char base = matrix[row][col];
-        return matrix[row + 1][col + 1] == base &&
+        boolean found = matrix[row + 1][col + 1] == base &&
                 matrix[row + 2][col + 2] == base &&
                 matrix[row + 3][col + 3] == base;
+        if(found) log.debug("Secuencia diagonal descendente encontrada en fila {} col {}", row, col);
+        return found;
     }
 }
