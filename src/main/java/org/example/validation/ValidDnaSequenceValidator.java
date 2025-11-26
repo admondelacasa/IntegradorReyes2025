@@ -16,7 +16,7 @@ public class ValidDnaSequenceValidator implements ConstraintValidator<ValidDnaSe
     }
 
     public static boolean isValidDna(String[] dna) {
-        if (dna == null || dna.length == 0 || dna.length >= 1000) {
+        if (dna == null || dna.length == 0) {
             return false;
         }
         final int n = dna.length;

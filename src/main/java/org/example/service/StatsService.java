@@ -14,10 +14,11 @@ public class StatsService {
     public StatsResponse getStats() {
         long humanCount = dnaRecordRepository.countByIsMutant(false);
         long mutantCount = dnaRecordRepository.countByIsMutant(true);
-        double ratio;
-        if (humanCount == 0) ratio = (double) mutantCount;
-        else ratio = (double)mutantCount / humanCount;
-
+        double ratio = calculateRatio(mutantCount, humanCount);
         return new StatsResponse(mutantCount, humanCount, ratio);
+    }
+    private double calculateRatio(long mutantCount, long humanCount) {
+        if (humanCount == 0) return (double) mutantCount;
+        return (double) mutantCount / humanCount;
     }
 }
